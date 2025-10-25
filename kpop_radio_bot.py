@@ -1,43 +1,61 @@
 import discord
-from keep_alive import keep_alive
-keep_alive()
-from discord import app_commands
 from discord.ext import commands
+from discord import app_commands
 import yt_dlp
 import random
 import asyncio
+import aiohttp
 import os
+from keep_alive import keep_alive
 
-# ===== CẤU HÌNH BOT =====
+keep_alive()
+
 intents = discord.Intents.default()
 intents.voice_states = True
 intents.guilds = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# ===== DANH SÁCH NHẠC KPOP NGẪU NHIÊN =====
+# ===== DANH SÁCH NHẠC KPOP =====
 KPOP_SONGS = [
-    "https://www.youtube.com/watch?v=Ng01EK5ePSU&list=RDNg01EK5ePSU&start_radio=1",
-    "https://www.youtube.com/watch?v=SKWxqYvqmmA&list=RDSKWxqYvqmmA&start_radio=1",
-    "https://www.youtube.com/watch?v=Ir4GwBhPNt0&list=RDIr4GwBhPNt0&start_radio=1",
-    "https://www.youtube.com/watch?v=Bjm920Fyo34&list=RDBjm920Fyo34&start_radio=1",
-    "https://www.youtube.com/watch?v=5UQzXbizT-s&list=RD5UQzXbizT-s&start_radio=1",
-    "https://www.youtube.com/watch?v=xQk_hnuRejE&list=RDxQk_hnuRejE&start_radio=1",
-    "https://www.youtube.com/watch?v=KBRJ3KMQZ18&list=RDKBRJ3KMQZ18&start_radio=1",
-    "https://www.youtube.com/watch?v=lmvOwd2j_1Q&list=RDlmvOwd2j_1Q&start_radio=1",
-    "https://www.youtube.com/watch?v=lqCM7xQozmY&list=RDlqCM7xQozmY&start_radio=1",
-    # Thêm link YouTube khác nếu muốn
+    "https://www.youtube.com/watch?v=Ng01EK5ePSU",
+    "https://www.youtube.com/watch?v=SKWxqYvqmmA",
+    "https://www.youtube.com/watch?v=Ir4GwBhPNt0",
+    "https://www.youtube.com/watch?v=Bjm920Fyo34",
+    "https://www.youtube.com/watch?v=5UQzXbizT-s",
+    "https://www.youtube.com/watch?v=xQk_hnuRejE",
+    "https://www.youtube.com/watch?v=KBRJ3KMQZ18",
+    "https://www.youtube.com/watch?v=lmvOwd2j_1Q",
+    "https://www.youtube.com/watch?v=lqCM7xQozmY"
 ]
 
-# ===== HÀM PHÁT NHẠC NGẪU NHIÊN VỚI EMBED =====
-def play_random_kpop(vc, interaction=None):
+current_song = {}
+current_info = {}
+
+# ===== LẤY LYRICS =====
+async def get_lyrics(title, artist):
+    query = f"{artist} {title}".replace(" ", "%20")
+    url = f"https://api.lyrics.ovh/v1/{artist}/{title}"
+    async with aiohttp.ClientSession() as session:
+        try:
+            async with session.get(url) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    lyrics = data.get("lyrics", "❌ Không tìm thấy lời bài hát.")
+                    return lyrics[:1500]  # Discord giới hạn 2000 ký tự
+        except:
+            pass
+    return "❌ Không tìm thấy lời bài hát."
+
+# ===== HÀM PHÁT NHẠC =====
+async def play_random_kpop(vc, interaction=None):
     url = random.choice(KPOP_SONGS)
 
     ydl_opts = {
-    'format': 'bestaudio/best',
-    'noplaylist': True,
-    'quiet': True,
-    'cookiefile': 'cookies_www.youtube.com.txt'
-        }
+        'format': 'bestaudio/best',
+        'noplaylist': True,
+        'quiet': True,
+        'cookiefile': 'cookies_www.youtube.com.txt'
+    }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         try:
@@ -51,14 +69,19 @@ def play_random_kpop(vc, interaction=None):
         uploader = info.get('uploader', 'Unknown Artist')
         thumbnail = info.get('thumbnail')
 
+    current_song[interaction.guild_id] = url
+    current_info[interaction.guild_id] = (title, uploader, thumbnail)
+
     def after_play(error):
         if error:
             print(f"Player error: {error}")
         else:
-            play_random_kpop(vc, interaction)  # Phát bài khác ngẫu nhiên
+            coro = play_random_kpop(vc)
+            asyncio.run_coroutine_threadsafe(coro, bot.loop)
 
     if vc.is_playing():
         vc.stop()
+
     vc.play(
         discord.FFmpegPCMAudio(
             audio_url,
@@ -68,16 +91,26 @@ def play_random_kpop(vc, interaction=None):
         after=after_play
     )
 
-    # Gửi Embed tên bài + nghệ sĩ
+    # Gửi Embed
+    embed = discord.Embed(
+        title=title,
+        description=f"🎤 {uploader}",
+        color=0xFF69B4
+    )
+    if thumbnail:
+        embed.set_thumbnail(url=thumbnail)
+
+    # Lấy lyrics
+    lyrics = await get_lyrics(title, uploader)
+    embed.add_field(name="📜 Lyrics", value=lyrics, inline=False)
+
     if interaction:
-        embed = discord.Embed(
-            title=title,
-            description=f"🎤 {uploader}",
-            color=0xFF69B4
-        )
-        if thumbnail:
-            embed.set_thumbnail(url=thumbnail)
-        asyncio.create_task(interaction.followup.send(embed=embed))
+        await interaction.followup.send(embed=embed)
+    else:
+        # Nếu phát tự động qua after_play
+        channel = discord.utils.get(bot.get_all_channels(), name="general")  # hoặc đổi thành kênh bạn muốn
+        if channel:
+            await channel.send(embed=embed)
 
 # ===== SỰ KIỆN ON_READY =====
 @bot.event
@@ -89,7 +122,7 @@ async def on_ready():
     except Exception as e:
         print(f"❌ Lỗi khi sync slash command: {e}")
 
-# ===== LỆNH /play =====
+# ===== /play =====
 @bot.tree.command(name="play", description="Phát nhạc KPop ngẫu nhiên 🎶")
 async def play(interaction: discord.Interaction):
     await interaction.response.defer()
@@ -105,9 +138,19 @@ async def play(interaction: discord.Interaction):
     else:
         vc = interaction.guild.voice_client
 
-    play_random_kpop(vc, interaction)
+    await play_random_kpop(vc, interaction)
 
-# ===== LỆNH /stop =====
+# ===== /next =====
+@bot.tree.command(name="next", description="Chuyển sang bài KPop tiếp theo ⏭️")
+async def next_song(interaction: discord.Interaction):
+    vc = interaction.guild.voice_client
+    if vc and vc.is_playing():
+        vc.stop()  # sẽ tự gọi after_play và phát bài mới
+        await interaction.response.send_message("⏭️ Đang chuyển sang bài tiếp theo...")
+    else:
+        await interaction.response.send_message("⚠️ Không có bài nào đang phát.", ephemeral=True)
+
+# ===== /stop =====
 @bot.tree.command(name="stop", description="Dừng phát nhạc ⏹️")
 async def stop(interaction: discord.Interaction):
     vc = interaction.guild.voice_client
@@ -117,7 +160,7 @@ async def stop(interaction: discord.Interaction):
     else:
         await interaction.response.send_message("⚠️ Không có bài nào đang phát.", ephemeral=True)
 
-# ===== LỆNH /leave =====
+# ===== /leave =====
 @bot.tree.command(name="leave", description="Bot rời khỏi kênh thoại 🚪")
 async def leave(interaction: discord.Interaction):
     vc = interaction.guild.voice_client
