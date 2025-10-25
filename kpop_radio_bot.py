@@ -15,25 +15,9 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 # ===== DANH SÁCH NHẠC KPOP NGẪU NHIÊN =====
 KPOP_SONGS = [
-    "https://www.youtube.com/watch?v=pcKR0LPwoYs&list=PL39Vgo021gjfHis9mCiE7XOApWaMlUxXY&index=1",
-    "https://www.youtube.com/watch?v=6GC8JF2FOgA&list=PL39Vgo021gjfHis9mCiE7XOApWaMlUxXY&index=2",
-    "https://www.youtube.com/watch?v=fTc5tuEn6_U&list=PL39Vgo021gjfHis9mCiE7XOApWaMlUxXY&index=3",
-    "https://www.youtube.com/watch?v=XyzaMpAVm3s&list=PL39Vgo021gjfHis9mCiE7XOApWaMlUxXY&index=4",
-    "https://www.youtube.com/watch?v=YmC53o2_gWk&list=PL39Vgo021gjfHis9mCiE7XOApWaMlUxXY&index=5",
-    "https://www.youtube.com/watch?v=SdHQkkRc-hc&list=PL39Vgo021gjfHis9mCiE7XOApWaMlUxXY&index=6",
-    "https://www.youtube.com/watch?v=W0cs6ciCt_k&list=PL39Vgo021gjfHis9mCiE7XOApWaMlUxXY&index=7",
-    "https://www.youtube.com/watch?v=O0StKlRHVeE&list=PL39Vgo021gjfHis9mCiE7XOApWaMlUxXY&index=8",
-    "https://www.youtube.com/watch?v=JvjWy4saR08&list=PL39Vgo021gjfHis9mCiE7XOApWaMlUxXY&index=9",
-    "https://www.youtube.com/watch?v=N5ShoQimivM&list=PL39Vgo021gjfHis9mCiE7XOApWaMlUxXY&index=10",
-    "https://www.youtube.com/watch?v=aE0eV2YR51k&list=PL39Vgo021gjfHis9mCiE7XOApWaMlUxXY&index=11",
-    "https://www.youtube.com/watch?v=A1aRHQ6EnXE&list=PL39Vgo021gjfHis9mCiE7XOApWaMlUxXY&index=12",
-    "https://www.youtube.com/watch?v=ToASX6axGuw&list=PL39Vgo021gjfHis9mCiE7XOApWaMlUxXY&index=13",
-    "https://www.youtube.com/watch?v=FFmdTU4Cpr8&list=PL39Vgo021gjfHis9mCiE7XOApWaMlUxXY&index=14",
-    "https://www.youtube.com/watch?v=qMWXVc3WAYs&list=PL39Vgo021gjfHis9mCiE7XOApWaMlUxXY&index=16",
-    "https://www.youtube.com/watch?v=uLfLbtulKZc&list=PL39Vgo021gjfHis9mCiE7XOApWaMlUxXY&index=17",
-    "https://www.youtube.com/watch?v=Z9b0Hj-BfaM&list=PL39Vgo021gjfHis9mCiE7XOApWaMlUxXY&index=18",
-    "https://www.youtube.com/watch?v=3DOkxQ3HDXE&list=PL39Vgo021gjfHis9mCiE7XOApWaMlUxXY&index=19",
-    "https://www.youtube.com/watch?v=8Q2mth2bX10&list=PL39Vgo021gjfHis9mCiE7XOApWaMlUxXY&index=20",
+    "https://www.youtube.com/watch?v=Ng01EK5ePSU&list=RDNg01EK5ePSU&start_radio=1",
+    "https://www.youtube.com/watch?v=SKWxqYvqmmA&list=RDSKWxqYvqmmA&start_radio=1",
+    "https://www.youtube.com/watch?v=Ir4GwBhPNt0&list=RDIr4GwBhPNt0&start_radio=1",
     # Thêm link YouTube khác
 ]
 
@@ -41,12 +25,11 @@ KPOP_SONGS = [
 def play_random_kpop(vc, interaction=None):
     url = random.choice(KPOP_SONGS)
 
-  ydl_opts = {
-    "format": "bestaudio",
-    "cookiefile": "cookies.txt",
-    "quiet": True,
-    "noplaylist": True,
-}
+    ydl_opts = {
+        'format': 'bestaudio/best',
+        'noplaylist': True,
+        'quiet': True
+    }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
