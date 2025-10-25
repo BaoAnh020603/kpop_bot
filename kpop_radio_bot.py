@@ -131,4 +131,5 @@ async def leave(interaction: discord.Interaction):
         await interaction.response.send_message("⚠️ Bot không ở trong kênh thoại.", ephemeral=True)
 
 # ===== CHẠY BOT =====
-bot.run("MTQzMTUyMjQ1MDg0MzExMTQ1NA.GHSozx.UPmMYJO2ohfYTtHqDQGpTdZZc_26js_9J8jL6E")
+import os
+bot.run(os.environ["DISCORD_TOKEN"])
