@@ -19,6 +19,12 @@ KPOP_SONGS = [
     "https://www.youtube.com/watch?v=Ng01EK5ePSU&list=RDNg01EK5ePSU&start_radio=1",
     "https://www.youtube.com/watch?v=SKWxqYvqmmA&list=RDSKWxqYvqmmA&start_radio=1",
     "https://www.youtube.com/watch?v=Ir4GwBhPNt0&list=RDIr4GwBhPNt0&start_radio=1",
+    "https://www.youtube.com/watch?v=Bjm920Fyo34&list=RDBjm920Fyo34&start_radio=1",
+    "https://www.youtube.com/watch?v=5UQzXbizT-s&list=RD5UQzXbizT-s&start_radio=1",
+    "https://www.youtube.com/watch?v=xQk_hnuRejE&list=RDxQk_hnuRejE&start_radio=1",
+    "https://www.youtube.com/watch?v=KBRJ3KMQZ18&list=RDKBRJ3KMQZ18&start_radio=1",
+    "https://www.youtube.com/watch?v=lmvOwd2j_1Q&list=RDlmvOwd2j_1Q&start_radio=1",
+    "https://www.youtube.com/watch?v=lqCM7xQozmY&list=RDlqCM7xQozmY&start_radio=1",
     # Thêm link YouTube khác nếu muốn
 ]
 
