@@ -6,6 +6,7 @@ from discord.ext import commands
 import yt_dlp
 import random
 import asyncio
+import os
 
 # ===== CẤU HÌNH BOT =====
 intents = discord.Intents.default()
@@ -18,7 +19,7 @@ KPOP_SONGS = [
     "https://www.youtube.com/watch?v=Ng01EK5ePSU&list=RDNg01EK5ePSU&start_radio=1",
     "https://www.youtube.com/watch?v=SKWxqYvqmmA&list=RDSKWxqYvqmmA&start_radio=1",
     "https://www.youtube.com/watch?v=Ir4GwBhPNt0&list=RDIr4GwBhPNt0&start_radio=1",
-    # Thêm link YouTube khác
+    # Thêm link YouTube khác nếu muốn
 ]
 
 # ===== HÀM PHÁT NHẠC NGẪU NHIÊN VỚI EMBED =====
@@ -28,11 +29,17 @@ def play_random_kpop(vc, interaction=None):
     ydl_opts = {
         'format': 'bestaudio/best',
         'noplaylist': True,
-        'quiet': True
+        'quiet': True,
+        'cookiefile': 'cookies_www.youtube.com.txt'  # <-- thêm cookie
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=False)
+        try:
+            info = ydl.extract_info(url, download=False)
+        except Exception as e:
+            print(f"❌ Lỗi khi lấy thông tin nhạc: {e}")
+            return
+
         audio_url = info['url']
         title = info.get('title', 'Unknown Title')
         uploader = info.get('uploader', 'Unknown Artist')
@@ -44,7 +51,8 @@ def play_random_kpop(vc, interaction=None):
         else:
             play_random_kpop(vc, interaction)  # Phát bài khác ngẫu nhiên
 
-    vc.stop()
+    if vc.is_playing():
+        vc.stop()
     vc.play(
         discord.FFmpegPCMAudio(
             audio_url,
@@ -115,5 +123,4 @@ async def leave(interaction: discord.Interaction):
         await interaction.response.send_message("⚠️ Bot không ở trong kênh thoại.", ephemeral=True)
 
 # ===== CHẠY BOT =====
-import os
 bot.run(os.environ["DISCORD_TOKEN"])
