@@ -30,7 +30,7 @@ def play_random_kpop(vc, interaction=None):
         'format': 'bestaudio/best',
         'noplaylist': True,
         'quiet': True,
-        'cookiefile': 'cookies_www.youtube.com.txt'  # <-- thêm cookie
+        'cookiefile': '/app/cookies_www.youtube.com.txt'
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
