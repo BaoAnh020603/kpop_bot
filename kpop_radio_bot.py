@@ -41,11 +41,12 @@ KPOP_SONGS = [
 def play_random_kpop(vc, interaction=None):
     url = random.choice(KPOP_SONGS)
 
-    ydl_opts = {
-        'format': 'bestaudio/best',
-        'noplaylist': True,
-        'quiet': True
-    }
+  ydl_opts = {
+    "format": "bestaudio",
+    "cookiefile": "cookies.txt",
+    "quiet": True,
+    "noplaylist": True,
+}
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
