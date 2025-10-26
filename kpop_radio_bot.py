@@ -40,46 +40,69 @@ def get_lyrics(query: str):
         pass
     return "Không tìm thấy lời bài hát 😢"
 
-# ===== HÀM PHÁT NHẠC =====
+# ===== HÀM TẠO FILE COOKIES TỪ ENV VAR =====
+def create_cookies_file():
+    cookies_content = os.environ.get("YOUTUBE_COOKIES")
+    if not cookies_content:
+        print("❌ Biến môi trường YOUTUBE_COOKIES chưa được thiết lập!")
+        return False
+    with open("www.youtube.com_cookies.txt", "w", encoding="utf-8") as f:
+        f.write(cookies_content)
+    return True
+
+# ===== HÀM PHÁT NHẠC NÂNG CẤP =====
 def play_kpop(vc, interaction=None):
     url = random.choice(KPOP_SONGS)
+
+    # Kiểm tra cookies
+    if not os.path.exists("www.youtube.com_cookies.txt"):
+        if not create_cookies_file():
+            if interaction:
+                asyncio.create_task(interaction.followup.send("❌ Không có file cookies để phát nhạc!"))
+            return
 
     ydl_opts = {
         "format": "bestaudio/best",
         "noplaylist": True,
         "quiet": True,
-        "cookiefile": "www.youtube.com_cookies"
+        "cookiefile": "www.youtube.com_cookies.txt"
     }
 
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        try:
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
-        except Exception as e:
-            print(f"❌ Lỗi khi lấy thông tin nhạc: {e}")
-            return
-
-        audio_url = info["url"]
-        title = info.get("title", "Unknown Title")
-        uploader = info.get("uploader", "Unknown Artist")
-        thumbnail = info.get("thumbnail")
+            audio_url = info["url"]
+            title = info.get("title", "Unknown Title")
+            uploader = info.get("uploader", "Unknown Artist")
+            thumbnail = info.get("thumbnail")
+    except Exception as e:
+        print(f"❌ Lỗi khi lấy thông tin nhạc ({url}): {e}")
+        # Tự động thử bài khác
+        play_kpop(vc, interaction)
+        return
 
     def after_play(err):
         if err:
-            print(f"Lỗi phát nhạc: {err}")
-        else:
-            play_kpop(vc, interaction)  # tự phát bài khác
+            print(f"❌ Lỗi phát nhạc: {err}")
+        # Tự động phát bài tiếp theo
+        play_kpop(vc, interaction)
 
     if vc.is_playing():
         vc.stop()
 
-    vc.play(
-        discord.FFmpegPCMAudio(
-            audio_url,
-            before_options="-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
-            options="-vn"
-        ),
-        after=after_play
-    )
+    try:
+        vc.play(
+            discord.FFmpegPCMAudio(
+                audio_url,
+                before_options="-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
+                options="-vn"
+            ),
+            after=after_play
+        )
+    except Exception as e:
+        print(f"❌ Lỗi khi phát nhạc: {e}")
+        play_kpop(vc, interaction)
+        return
 
     # === Embed bài nhạc + lyrics ===
     lyrics = get_lyrics(title)
@@ -91,7 +114,8 @@ def play_kpop(vc, interaction=None):
     if thumbnail:
         embed.set_thumbnail(url=thumbnail)
 
-    asyncio.create_task(interaction.followup.send(embed=embed))
+    if interaction:
+        asyncio.create_task(interaction.followup.send(embed=embed))
 
 # ===== SỰ KIỆN =====
 @bot.event
