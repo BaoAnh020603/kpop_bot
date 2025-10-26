@@ -19,7 +19,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 # ===== DANH SÁCH NHẠC KPOP NGẪU NHIÊN =====
 KPOP_SONGS = [
-    "https://www.youtube.com/watch?v=saaRSlOgtSk&list=RDsaaRSlOgtSk&start_radio=1",
+    "https://www.youtube.com/watch?v=pcKR0LPwoYs",
 ]
 
 queues = {}       # {guild_id: [list of URLs]}
@@ -316,4 +316,5 @@ else:
     print("❌ LỖI NGHIÊM TRỌNG: KHÔNG TÌM THẤY DISCORD_TOKEN trong biến môi trường.")
 
     print("Vui lòng đặt mã token mới (vừa reset) vào biến môi trường tên là DISCORD_TOKEN.")
+
 
