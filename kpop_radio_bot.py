@@ -48,7 +48,7 @@ def play_kpop(vc, interaction=None):
         "format": "bestaudio/best",
         "noplaylist": True,
         "quiet": True,
-        "cookiefile": "cookies_www.youtube.com.txt"
+        "cookiefile": "www.youtube.com_cookies"
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
