@@ -291,4 +291,6 @@ async def help(interaction: discord.Interaction):
     await interaction.response.send_message(embed=embed)
 
 # ===== CHẠY BOT =====
-bot.run(os.environ["DISCORD_TOKEN"])
+bot.run("MTQzMTUyMjQ1MDg0MzExMTQ1NA.GqldV0.o5P7gD4npliKRTHK6qgmTcF2b1Kfg5EGXKgBIE")
+
+
