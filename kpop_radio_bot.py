@@ -19,28 +19,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 # ===== DANH SÁCH NHẠC KPOP NGẪU NHIÊN =====
 KPOP_SONGS = [
-    "https://www.youtube.com/watch?v=Ng01EK5ePSU",
-    "https://www.youtube.com/watch?v=SKWxqYvqmmA",
-    "https://www.youtube.com/watch?v=Ir4GwBhPNt0",
-    "https://www.youtube.com/watch?v=Bjm920Fyo34",
-    "https://www.youtube.com/watch?v=5UQzXbizT-s",
-    "https://www.youtube.com/watch?v=xQk_hnuRejE",
-    "https://www.youtube.com/watch?v=KBRJ3KMQZ18",
-    "https://www.youtube.com/watch?v=lmvOwd2j_1Q",
-    "https://www.youtube.com/watch?v=lqCM7xQozmY",
-    "https://www.youtube.com/watch?v=GRbF3DKd7rM",
-    "https://www.youtube.com/watch?v=IwNDRDsW_UE",
-    "https://www.youtube.com/watch?v=y72_r33ca88",
-    "https://www.youtube.com/watch?v=4hXF67LbRPo",
-    "https://www.youtube.com/watch?v=i__0VanmURE",
-    "https://www.youtube.com/watch?v=yp0sRO6T-W8",
-    "https://www.youtube.com/watch?v=8ykKs4gUuMg",
-    "https://www.youtube.com/watch?v=uUK1TJDWHUM",
-    "https://www.youtube.com/watch?v=fexlk_TlRpc",
-    "https://www.youtube.com/watch?v=uLfLbtulKZc",
-    "https://www.youtube.com/watch?v=Z9b0Hj-BfaM",
-    "https://www.youtube.com/watch?v=3DOkxQ3HDXE",
-    "https://www.youtube.com/watch?v=8Q2mth2bX10",
+    "https://www.youtube.com/watch?v=7AdzoG_jXcA",
 ]
 
 queues = {}       # {guild_id: [list of URLs]}
@@ -335,4 +314,5 @@ if TOKEN:
     bot.run(TOKEN)
 else:
     print("❌ LỖI NGHIÊM TRỌNG: KHÔNG TÌM THẤY DISCORD_TOKEN trong biến môi trường.")
+
     print("Vui lòng đặt mã token mới (vừa reset) vào biến môi trường tên là DISCORD_TOKEN.")
