@@ -61,7 +61,7 @@ async def play_next_song(vc, interaction=None):
         # ⭐️ THÊM CẤU HÌNH COOKIE VÀO YT-DLP
         "extractor_args": {
             "youtube": {
-                "cookie": www.youtube.com_cookies.txt
+                "cookie": cookies_content
             }
         } if cookies_content else {}
     }
@@ -285,4 +285,5 @@ if TOKEN:
 else:
     print("❌ LỖI NGHIÊM TRỌNG: KHÔNG TÌM THẤY DISCORD_TOKEN trong biến môi trường.")
     print("Vui lòng đặt mã token mới (vừa reset) vào biến môi trường tên là DISCORD_TOKEN.")
+
 
