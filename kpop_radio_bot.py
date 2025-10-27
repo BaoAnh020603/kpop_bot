@@ -16,17 +16,16 @@ intents.guilds = True
 intents.message_content = True 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# ===== DANH SÁCH NHẠC KPOP NGẪU NHIÊN =====
-# Lưu ý: Các URL này vẫn có thể gây lỗi nếu bạn KHÔNG cung cấp cookie.
-# URL mẫu cũ của bạn bị lỗi xác thực, nên được thay bằng 1 URL đơn giản hơn:
+# ===== DANH SÁCH NHẠC (SỬ DỤNG DAILYMOTION/YT CÔNG KHAI) =====
+# ⭐️ ĐÃ SỬA: Chuyển sang URL Dailymotion để tránh lỗi xác thực YouTube
 KPOP_SONGS = [
-    "https://www.youtube.com/watch?v=LGT57X_O0tU", 
+    "https://www.dailymotion.com/video/x7zuocf", 
 ]
 
 queues = {}       
 current_song = {} 
 
-# ===== HÀM LẤY LYRICS =====
+# ===== HÀM LẤY LYRICS (Giữ nguyên) =====
 def get_lyrics(query: str):
     try:
         resp = requests.get(f"https://some-random-api.com/lyrics?title={query}")
@@ -40,7 +39,7 @@ def get_lyrics(query: str):
         pass
     return "Không tìm thấy lời bài hát 😢"
 
-# ===== HÀM PHÁT NHẠC (ĐÃ THÊM LOGIC COOKIE) =====
+# ===== HÀM PHÁT NHẠC (ĐÃ XÓA LOGIC COOKIE) =====
 async def play_next_song(vc, interaction=None):
     guild_id = vc.guild.id
     
@@ -50,20 +49,12 @@ async def play_next_song(vc, interaction=None):
 
     url = queues[guild_id].pop(0)
 
-    # ⭐️ BƯỚC SỬA LỖI: Lấy nội dung cookie từ biến môi trường
-    cookies_content = os.environ.get("YOUTUBE_COOKIES")
-
+    # ⭐️ ĐÃ SỬA: Loại bỏ logic cookies_content vì không dùng YouTube nữa
     ydl_opts = {
         "format": "bestaudio/best",
         "quiet": True,
         "nocheckcertificate": True,
         "http_headers": {"User-Agent": "Mozilla/5.0"},
-        # ⭐️ THÊM CẤU HÌNH COOKIE VÀO YT-DLP
-        "extractor_args": {
-            "youtube": {
-                "cookie": cookies_content
-            }
-        } if cookies_content else {}
     }
 
     try:
@@ -107,7 +98,6 @@ async def play_next_song(vc, interaction=None):
         vc.play(
             discord.FFmpegPCMAudio(
                 audio_url,
-                # FFmpeg đã được cài đặt thành công ở bước trước
                 before_options="-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
                 options="-vn"
             ),
@@ -125,7 +115,7 @@ async def play_next_song(vc, interaction=None):
         description=f"👩‍🎤 **{uploader}**\n\n📜 **Lyrics (Trích đoạn):**\n{lyrics}",
         color=0xFF69B4 
     )
-    embed.add_field(name="🎧 YouTube", value=f"[Xem trên YouTube]({webpage_url})", inline=False)
+    embed.add_field(name="🎧 Dailymotion/YouTube", value=f"[Xem trên Web]({webpage_url})", inline=False)
     if thumbnail:
         embed.set_thumbnail(url=thumbnail)
     
@@ -140,7 +130,7 @@ async def play_next_song(vc, interaction=None):
         await vc.channel.send(embed=embed)
 
 
-# ===== SỰ KIỆN BOT VÀ CÁC LỆNH KHÁC (GIỮ NGUYÊN) =====
+# ===== CÁC LỆNH KHÁC (GIỮ NGUYÊN) =====
 @bot.event
 async def on_ready():
     print(f"✅ Bot đã đăng nhập: {bot.user}")
@@ -238,7 +228,7 @@ async def nowplaying(interaction: discord.Interaction):
     if song:
         embed = discord.Embed(
             title=f"🎶 Đang phát: {song['title']}",
-            description=f"👩‍🎤 {song['uploader']}\n🔗 [Xem trên YouTube]({song['url']})",
+            description=f"👩‍🎤 {song['uploader']}\n🔗 [Xem trên Dailymotion/YouTube]({song['url']})",
             color=0xFF69B4
         )
         if song["thumbnail"]:
@@ -284,9 +274,3 @@ if TOKEN:
     bot.run(TOKEN)
 else:
     print("❌ LỖI NGHIÊM TRỌNG: KHÔNG TÌM THẤY DISCORD_TOKEN trong biến môi trường.")
-    print("Vui lòng đặt mã token mới (vừa reset) vào biến môi trường tên là DISCORD_TOKEN.")
-
-
-
-
-
