@@ -1,10 +1,9 @@
 # Dockerfile
-# THAY THẾ dòng 3 bằng:
-FROM python:3.11-slim-buster
-# HOẶC
-# FROM python:3.10-slim-buster 
+# Thay thế: FROM python:3.12-slim-buster (đang gây lỗi)
+# Bằng phiên bản Python 3.12 dựa trên Debian Bullseye (ổn định hơn)
+FROM python:3.12-slim-bullseye
 
-# ⭐️ CÀI ĐẶT FFMPEG (Đây là bước khắc phục lỗi chính)
+# ⭐️ CÀI ĐẶT FFMPEG (Lệnh này sẽ hoạt động với Bullseye)
 RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
 
 # Thiết lập thư mục làm việc
