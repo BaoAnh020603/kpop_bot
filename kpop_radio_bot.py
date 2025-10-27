@@ -17,7 +17,7 @@ intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 # ===== DANH SÁCH NHẠC (SỬ DỤNG DAILYMOTION/YT CÔNG KHAI) =====
-# ⭐️ ĐÃ SỬA: Chuyển sang URL Dailymotion để tránh lỗi xác thực YouTube
+# ⭐️ Ghi chú: Sử dụng Dailymotion/YouTube M/V công khai để tránh lỗi xác thực
 KPOP_SONGS = [
     "https://www.dailymotion.com/video/x7zuocf",
     "https://www.dailymotion.com/video/x8psjs7",
@@ -37,8 +37,8 @@ KPOP_SONGS = [
     "https://www.dailymotion.com/video/x3cbksb",
     "https://www.dailymotion.com/video/x8ucqke",
     "https://www.dailymotion.com/video/x8aauvk",
-    "https://www.dailymotion.com/video/x1y5ufe", #
-    
+    "https://www.dailymotion.com/video/x1y5ufe", 
+    "https://www.youtube.com/watch?v=LGT57X_O0tU", # Ví dụ về YouTube công khai
 ]
 
 queues = {}       
@@ -58,7 +58,7 @@ def get_lyrics(query: str):
         pass
     return "Không tìm thấy lời bài hát 😢"
 
-# ===== HÀM PHÁT NHẠC (ĐÃ XÓA LOGIC COOKIE) =====
+# ===== HÀM PHÁT NHẠC (ĐÃ SỬA LỖI AFTER_PLAY VÀ COOKIE) =====
 async def play_next_song(vc, interaction=None):
     guild_id = vc.guild.id
     
@@ -68,7 +68,7 @@ async def play_next_song(vc, interaction=None):
 
     url = queues[guild_id].pop(0)
 
-    # ⭐️ ĐÃ SỬA: Loại bỏ logic cookies_content vì không dùng YouTube nữa
+    # Đã xóa logic cookies_content để tránh lỗi hết hạn
     ydl_opts = {
         "format": "bestaudio/best",
         "quiet": True,
@@ -90,6 +90,7 @@ async def play_next_song(vc, interaction=None):
 
     except Exception as e:
         print(f"❌ Lỗi yt-dlp khi xử lý {url}: {e}")
+        # Tự động chuyển bài
         if queues[guild_id]:
             await play_next_song(vc, interaction)
         return
@@ -101,14 +102,14 @@ async def play_next_song(vc, interaction=None):
         "url": webpage_url
     }
 
+    # ⭐️ SỬA LỖI: Cải thiện hàm after_play để xử lý chuyển bài an toàn
     def after_play(err):
         if err:
             print(f"❌ Lỗi khi phát nhạc: {err}")
-        fut = asyncio.run_coroutine_threadsafe(play_next_song(vc, None), bot.loop)
-        try:
-            fut.result()
-        except Exception as e:
-            print(f"❌ Lỗi asyncio khi chuyển bài: {e}")
+        
+        # Chạy coroutine trong event loop chính để chuyển bài
+        asyncio.run_coroutine_threadsafe(play_next_song(vc, None), bot.loop)
+        # Khối try/except fut.result() đã bị loại bỏ để tránh chặn thread
 
     if vc.is_playing():
         vc.stop()
@@ -117,6 +118,7 @@ async def play_next_song(vc, interaction=None):
         vc.play(
             discord.FFmpegPCMAudio(
                 audio_url,
+                # Giả định FFmpeg đã được cài đặt qua Dockerfile
                 before_options="-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
                 options="-vn"
             ),
@@ -124,6 +126,7 @@ async def play_next_song(vc, interaction=None):
         )
     except Exception as e:
         print(f"❌ Lỗi khi gọi vc.play: {e}")
+        # Tự động chuyển bài
         if queues[guild_id]:
             await play_next_song(vc, interaction)
         return
@@ -134,7 +137,7 @@ async def play_next_song(vc, interaction=None):
         description=f"👩‍🎤 **{uploader}**\n\n📜 **Lyrics (Trích đoạn):**\n{lyrics}",
         color=0xFF69B4 
     )
-    embed.add_field(name="🎧 Dailymotion/YouTube", value=f"[Xem trên Web]({webpage_url})", inline=False)
+    embed.add_field(name="🎧 Nguồn", value=f"[Xem trên Web]({webpage_url})", inline=False)
     if thumbnail:
         embed.set_thumbnail(url=thumbnail)
     
@@ -293,4 +296,3 @@ if TOKEN:
     bot.run(TOKEN)
 else:
     print("❌ LỖI NGHIÊM TRỌNG: KHÔNG TÌM THẤY DISCORD_TOKEN trong biến môi trường.")
-
