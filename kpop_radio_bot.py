@@ -19,7 +19,26 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 # ===== DANH SÁCH NHẠC (SỬ DỤNG DAILYMOTION/YT CÔNG KHAI) =====
 # ⭐️ ĐÃ SỬA: Chuyển sang URL Dailymotion để tránh lỗi xác thực YouTube
 KPOP_SONGS = [
-    "https://www.dailymotion.com/video/x7zuocf", 
+    "https://www.dailymotion.com/video/x7zuocf",
+    "https://www.dailymotion.com/video/x8psjs7",
+    "https://www.dailymotion.com/video/x7t3ao4",
+    "https://www.dailymotion.com/video/x425w0w",
+    "https://www.dailymotion.com/video/x3zwk2r",
+    "https://www.dailymotion.com/video/x683djo",
+    "https://www.dailymotion.com/video/x7bugyp",
+    "https://www.dailymotion.com/video/x8pl2nq",
+    "https://www.dailymotion.com/video/x4qz046",
+    "https://www.dailymotion.com/video/x8p3p6w",
+    "https://www.dailymotion.com/video/x42wf0z",
+    "https://www.dailymotion.com/video/x2wto4r",
+    "https://www.dailymotion.com/video/x9miaw0",
+    "https://www.dailymotion.com/video/x74e7xl",
+    "https://www.dailymotion.com/video/x2mpj5b",
+    "https://www.dailymotion.com/video/x3cbksb",
+    "https://www.dailymotion.com/video/x8ucqke",
+    "https://www.dailymotion.com/video/x8aauvk",
+    "https://www.dailymotion.com/video/x1y5ufe", #
+    
 ]
 
 queues = {}       
@@ -274,3 +293,4 @@ if TOKEN:
     bot.run(TOKEN)
 else:
     print("❌ LỖI NGHIÊM TRỌNG: KHÔNG TÌM THẤY DISCORD_TOKEN trong biến môi trường.")
+
