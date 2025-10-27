@@ -1,5 +1,6 @@
-# Sử dụng Python 3.13 (hoặc phiên bản bạn đang dùng) dựa trên Debian
-FROM python:3.13-slim-buster
+# Dockerfile
+# Thay thế: FROM python:3.13-slim-buster
+FROM python:3.12-slim-buster
 
 # ⭐️ CÀI ĐẶT FFMPEG (Đây là bước khắc phục lỗi chính)
 RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
