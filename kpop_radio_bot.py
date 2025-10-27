@@ -5,9 +5,8 @@ import random
 import asyncio
 import os
 import requests
-
-# ⚠️ LƯU Ý: Nếu bạn dùng Railway/Replit, hãy đảm bảo keep_alive đã được cấu hình đúng
 from keep_alive import keep_alive 
+
 keep_alive() 
 
 # ===== CẤU HÌNH BOT =====
@@ -42,6 +41,9 @@ DEFAULT_KPOP_SONGS = [
 
 queues = {}       
 current_song = {} 
+IDLE_TIMEOUT = 300 # 5 phút (300 giây)
+idle_timers = {}   # {guild_id: asyncio.Task}
+
 
 # Hàm tìm kiếm YouTube bằng yt-dlp
 def search_youtube(query):
@@ -62,6 +64,31 @@ def search_youtube(query):
         print(f"❌ Lỗi tìm kiếm yt-dlp: {e}")
         return None
 
+
+# Hàm kiểm tra và hủy timer tự động rời đi
+def cancel_idle_timer(guild_id):
+    if guild_id in idle_timers:
+        idle_timers[guild_id].cancel()
+        del idle_timers[guild_id]
+
+# Hàm thiết lập timer tự động rời đi
+async def set_idle_timer(guild_id, vc):
+    cancel_idle_timer(guild_id)
+    
+    async def idle_timeout():
+        await asyncio.sleep(IDLE_TIMEOUT)
+        
+        # Kiểm tra lại trước khi ngắt kết nối
+        if vc and not vc.is_playing() and len(queues.get(guild_id, [])) == 0:
+            # Chỉ ngắt nếu bot đang ở một mình hoặc không có ai tương tác
+            if len(vc.channel.members) <= 1: 
+                await vc.channel.send("👋 Bot đã rời khỏi kênh thoại do không hoạt động trong 5 phút.")
+                await vc.disconnect()
+                await bot.change_presence(activity=discord.Game(name="KPop Radio | Dùng /play"))
+
+    idle_timers[guild_id] = bot.loop.create_task(idle_timeout())
+
+
 # ===== KHAI BÁO VIEWS (NÚT BẤM TƯƠNG TÁC) =====
 class PlayerButtons(discord.ui.View):
     def __init__(self, bot):
@@ -69,8 +96,8 @@ class PlayerButtons(discord.ui.View):
         self.bot = bot
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        # Giới hạn tương tác: chỉ cho phép người dùng có quyền trong kênh thoại
-        if interaction.user.voice is None or interaction.user.voice.channel != interaction.guild.voice_client.channel:
+        vc = interaction.guild.voice_client
+        if vc is None or interaction.user.voice is None or interaction.user.voice.channel != vc.channel:
             await interaction.response.send_message("❌ Bạn phải ở trong kênh thoại để điều khiển bot.", ephemeral=True)
             return False
         return True
@@ -96,9 +123,7 @@ class PlayerButtons(discord.ui.View):
                 await interaction.response.send_message("▶️ Tiếp tục phát nhạc.", ephemeral=True)
             else:
                 await interaction.response.send_message("⚠️ Không có bài nào đang phát.", ephemeral=True)
-        else:
-            await interaction.response.send_message("⚠️ Bot chưa tham gia kênh thoại.", ephemeral=True)
-            
+        
     @discord.ui.button(label="Dừng & Rời", style=discord.ButtonStyle.danger, emoji="🛑", custom_id="stop_leave_button")
     async def stop_leave_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
         vc = interaction.guild.voice_client
@@ -118,10 +143,13 @@ async def play_next_song(vc, interaction=None):
     
     if not queues.get(guild_id):
         current_song[guild_id] = None
-        await bot.change_presence(activity=discord.Game(name="KPop Radio | Dùng /play"))
-        await asyncio.sleep(1)
+        # Kích hoạt timer tự động rời đi khi hàng đợi trống
+        await set_idle_timer(guild_id, vc) 
         return
 
+    # Hủy bỏ timer tự động rời đi khi bắt đầu phát bài mới
+    cancel_idle_timer(guild_id)
+    
     url = queues[guild_id].pop(0)
 
     ydl_opts = {
@@ -211,14 +239,12 @@ async def play_next_song(vc, interaction=None):
     
     if interaction:
         try:
-            # Gửi followup với view
             await interaction.followup.send(embed=embed, view=view)
         except discord.errors.NotFound:
             channel = interaction.channel
             if channel:
                 await channel.send(embed=embed, view=view)
     elif vc.channel:
-        # Gửi vào kênh nếu tự động chuyển bài
         await vc.channel.send(embed=embed, view=view)
 
 
@@ -227,13 +253,11 @@ async def play_next_song(vc, interaction=None):
 async def on_ready():
     print(f"✅ Bot đã đăng nhập: {bot.user}")
     try:
-        # Đồng bộ Slash Commands
         synced = await bot.tree.sync()
         print(f"🔁 Đã đồng bộ {len(synced)} slash command.")
     except Exception as e:
         print(f"❌ Lỗi khi sync slash command: {e}")
     
-    # Đặt trạng thái ban đầu
     await bot.change_presence(activity=discord.Game(name="KPop Radio | Dùng /play"))
 
 
@@ -243,15 +267,16 @@ async def play(interaction: discord.Interaction, query: str = None):
     await interaction.response.defer() 
 
     guild = interaction.guild
-    voice_channel = discord.utils.get(guild.voice_channels, name="🎧│chill-room")
+    # Ưu tiên kênh thoại người dùng đang ở
+    if interaction.user.voice and interaction.user.voice.channel:
+        voice_channel = interaction.user.voice.channel
+    else:
+        # Nếu không, tìm kênh mặc định
+        voice_channel = discord.utils.get(guild.voice_channels, name="🎧│chill-room")
 
     if not voice_channel:
-        # THÊM LOGIC JOIN ĐỘNG: Nếu người dùng đang ở trong kênh thoại nào, join kênh đó
-        if interaction.user.voice and interaction.user.voice.channel:
-            voice_channel = interaction.user.voice.channel
-        else:
-            await interaction.followup.send("❌ Không tìm thấy kênh thoại `🎧│chill-room` và bạn không ở trong kênh thoại nào!", ephemeral=True)
-            return
+        await interaction.followup.send("❌ Vui lòng vào kênh thoại hoặc tạo kênh `🎧│chill-room`.", ephemeral=True)
+        return
 
     vc = guild.voice_client
     if vc is None:
@@ -287,9 +312,8 @@ async def play(interaction: discord.Interaction, query: str = None):
         asyncio.create_task(play_next_song(vc, interaction))
 
 
-# ===== /skip, /pause, /resume, /stop, /leave (Có thể xóa nếu dùng Buttons) =====
-# Giữ lại để dự phòng và đảm bảo lệnh /help khớp với nội dung đã được sync.
-
+# ===== /skip, /pause, /resume, /stop, /leave (Giữ nguyên) =====
+# Các lệnh này vẫn hoạt động, nhưng nút bấm là giao diện chính
 @bot.tree.command(name="skip", description="Chuyển sang bài tiếp theo ⏭️")
 async def skip(interaction: discord.Interaction):
     vc = interaction.guild.voice_client
