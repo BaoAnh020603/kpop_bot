@@ -9,14 +9,14 @@ from keep_alive import keep_alive
 
 keep_alive() 
 
-# ===== CẤU HÌNH BOT =====
+# ===== CẤU HÌNH BOT (Giữ nguyên) =====
 intents = discord.Intents.default()
 intents.voice_states = True
 intents.guilds = True
 intents.message_content = True 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# ===== DANH SÁCH NHẠC MẶC ĐỊNH & QUEUE =====
+# ===== DANH SÁCH NHẠC MẶC ĐỊNH & QUEUE (CHỈ DAILYMOTION) =====
 DEFAULT_KPOP_SONGS = [
     "https://www.dailymotion.com/video/x7zuocf",
     "https://www.dailymotion.com/video/x8psjs7",
@@ -36,50 +36,45 @@ DEFAULT_KPOP_SONGS = [
     "https://www.dailymotion.com/video/x3cbksb",
     "https://www.dailymotion.com/video/x8ucqke",
     "https://www.dailymotion.com/video/x8aauvk",
-    "https://www.dailymotion.com/video/x1y5ufe",
+    "https://www.dailymotion.com/video/x1y5ufe", 
 ]
 
 queues = {}       
 current_song = {} 
-IDLE_TIMEOUT = 300 # 5 phút (300 giây)
-idle_timers = {}   # {guild_id: asyncio.Task}
+IDLE_TIMEOUT = 300 
+idle_timers = {}   
 
-
-# Hàm tìm kiếm YouTube bằng yt-dlp
-def search_youtube(query):
+# ⭐️ HÀM MỚI: Hỗ trợ Playlist Dailymotion ⭐️
+def extract_info_from_url(url):
     ydl_opts = {
         'format': 'bestaudio/best',
         'quiet': True,
-        'default_search': 'ytsearch',
         'nocheckcertificate': True,
         "http_headers": {"User-Agent": "Mozilla/5.0"},
+        'extract_flat': 'in_playlist',
     }
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(query, download=False)
-            if 'entries' in info:
-                return info['entries'][0]
+            # Đối với URL, cố gắng lấy toàn bộ playlist Dailymotion
+            info = ydl.extract_info(url, download=False, process=False)
             return info
     except Exception as e:
-        print(f"❌ Lỗi tìm kiếm yt-dlp: {e}")
+        print(f"❌ Lỗi yt-dlp khi trích xuất info: {e}")
         return None
 
-# Hàm kiểm tra và hủy timer tự động rời đi
+# (Hàm quản lý timer: cancel_idle_timer, set_idle_timer giữ nguyên)
 def cancel_idle_timer(guild_id):
     if guild_id in idle_timers:
         idle_timers[guild_id].cancel()
         del idle_timers[guild_id]
 
-# Hàm thiết lập timer tự động rời đi
 async def set_idle_timer(guild_id, vc):
     cancel_idle_timer(guild_id)
     
     async def idle_timeout():
         await asyncio.sleep(IDLE_TIMEOUT)
         
-        # Kiểm tra lại trước khi ngắt kết nối
         if vc and not vc.is_playing() and len(queues.get(guild_id, [])) == 0:
-            # Chỉ ngắt nếu bot đang ở một mình hoặc không có ai tương tác
             if len(vc.channel.members) <= 1: 
                 await vc.channel.send("👋 Bot đã rời khỏi kênh thoại do không hoạt động trong 5 phút.")
                 await vc.disconnect()
@@ -88,7 +83,7 @@ async def set_idle_timer(guild_id, vc):
     idle_timers[guild_id] = bot.loop.create_task(idle_timeout())
 
 
-# ===== KHAI BÁO VIEWS (NÚT BẤM TƯƠNG TÁC) =====
+# (PlayerButtons class giữ nguyên)
 class PlayerButtons(discord.ui.View):
     def __init__(self, bot):
         super().__init__(timeout=None)
@@ -159,7 +154,7 @@ async def play_next_song(vc, interaction=None):
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
+            info = ydl.extract_info(url, download=False, process=True)
             audio_url = info.get("url")
             title = info.get("title", "Unknown Title")
             uploader = info.get("uploader", "Unknown Artist")
@@ -188,7 +183,6 @@ async def play_next_song(vc, interaction=None):
         "url": webpage_url
     }
     
-    # Cập nhật trạng thái bot
     await bot.change_presence(
         activity=discord.Activity(
             type=discord.ActivityType.listening, 
@@ -196,7 +190,6 @@ async def play_next_song(vc, interaction=None):
         )
     )
 
-    # Cải thiện hàm after_play để xử lý chuyển bài an toàn
     def after_play(err):
         if err:
             print(f"❌ Lỗi khi phát nhạc: {err}")
@@ -211,9 +204,6 @@ async def play_next_song(vc, interaction=None):
                 before_options="-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
                 options="-vn"
             )
-        # Mức âm lượng mặc định là 100% (1.0), nếu người dùng chỉnh, nó sẽ thay đổi
-        # source = discord.PCMVolumeTransformer(source, volume=vc.source.volume if hasattr(vc.source, 'volume') else 1.0) 
-        
         vc.play(
             source,
             after=after_play
@@ -228,7 +218,7 @@ async def play_next_song(vc, interaction=None):
     embed = discord.Embed(
         title=f"🎶 Đang phát: {title}",
         description=f"**🎤 Chủ kênh đăng tải video:** {uploader}",
-        color=0xFF0099 # Hồng K-Pop
+        color=0xFF0099 
     )
     embed.add_field(name="🔗 Nguồn", value=f"[Xem trên Web]({webpage_url})", inline=True)
     embed.set_footer(text=f"Hàng đợi: {len(queues.get(guild_id, []))} bài | Auto-Queue Đang Bật 🔄")
@@ -250,7 +240,7 @@ async def play_next_song(vc, interaction=None):
         await vc.channel.send(embed=embed, view=view)
 
 
-# ===== SỰ KIỆN BOT =====
+# ===== SỰ KIỆN BOT (Giữ nguyên) =====
 @bot.event
 async def on_ready():
     print(f"✅ Bot đã đăng nhập: {bot.user}")
@@ -263,8 +253,8 @@ async def on_ready():
     await bot.change_presence(activity=discord.Game(name="KPop Radio | Dùng /play"))
 
 
-# ===== /play (Hỗ trợ Search) =====
-@bot.tree.command(name="play", description="Phát nhạc KPop ngẫu nhiên hoặc tìm kiếm bài hát 🎶")
+# ⭐️ LỆNH /play (Chỉ Hỗ trợ URL Dailymotion và Playlist) ⭐️
+@bot.tree.command(name="play", description="Phát nhạc ngẫu nhiên hoặc thêm Playlist/URL Dailymotion 🎶")
 async def play(interaction: discord.Interaction, query: str = None):
     await interaction.response.defer()
 
@@ -286,24 +276,52 @@ async def play(interaction: discord.Interaction, query: str = None):
             await interaction.followup.send("❌ Không thể kết nối kênh thoại. Vui lòng thử lại.", ephemeral=True)
             return
     
-    # Xử lý Query
+    # Xử lý Query/Playlist
     if query:
-        if query.startswith("http"):
-            url = query
-            song_title = "URL đã cung cấp"
-        else:
-            info = await asyncio.to_thread(search_youtube, query) 
-            if not info or 'webpage_url' not in info:
-                await interaction.followup.send(f"❌ Không tìm thấy bài hát cho từ khóa: `{query}`.", ephemeral=True)
+        # ⚠️ CHỈ CHO PHÉP URL (BỎ LOGIC TÌM KIẾM TÊN BÀI HÁT)
+        if not query.startswith("http"):
+            await interaction.followup.send("❌ Vui lòng cung cấp URL Dailymotion hợp lệ (không hỗ trợ tìm kiếm tên bài).", ephemeral=True)
+            return
+
+        info = await asyncio.to_thread(extract_info_from_url, query)
+        
+        if not info:
+            await interaction.followup.send(f"❌ Không tìm thấy thông tin cho URL `{query}`.", ephemeral=True)
+            return
+
+        # ⭐️ Logic xử lý Playlist (Queue nhiều bài) ⭐️
+        if info.get('_type') == 'playlist' and 'entries' in info:
+            count = 0
+            for entry in info['entries']:
+                if entry and 'webpage_url' in entry:
+                    queues.setdefault(guild.id, []).append(entry['webpage_url'])
+                    count += 1
+            
+            if count > 0:
+                msg = f"✅ Đã thêm **{count}** bài hát từ Playlist `{info.get('title', 'Không tên')}` vào hàng đợi!"
+                if not vc.is_playing() and not vc.is_paused():
+                     asyncio.create_task(play_next_song(vc, interaction))
+                await interaction.followup.send(msg)
                 return
+            else:
+                await interaction.followup.send("⚠️ Playlist không chứa URL bài hát hợp lệ nào.", ephemeral=True)
+                return
+        
+        # Logic xử lý Video Đơn
+        elif 'webpage_url' in info:
             url = info['webpage_url']
             song_title = info['title']
+        else:
+            await interaction.followup.send(f"❌ Lỗi khi xử lý URL `{query}`.", ephemeral=True)
+            return
     else:
+        # Nếu không có query, chọn bài ngẫu nhiên từ danh sách mặc định
         url = random.choice(DEFAULT_KPOP_SONGS)
         song_title = "bài hát ngẫu nhiên"
-
+        
+    # Thêm bài hát đơn vào queue
     queues.setdefault(guild.id, []).append(url)
-
+    
     # Thông báo thêm vào queue/bắt đầu phát
     if vc.is_playing() or vc.is_paused():
         await interaction.followup.send(f"✅ Đã thêm **{song_title}** vào hàng đợi.")
@@ -312,7 +330,7 @@ async def play(interaction: discord.Interaction, query: str = None):
         asyncio.create_task(play_next_song(vc, interaction))
 
 
-# ⭐️ LỆNH MỚI: Điều chỉnh âm lượng ⭐️
+# (Các lệnh khác giữ nguyên)
 @bot.tree.command(name="volume", description="Điều chỉnh âm lượng bot (0-100%) 🔊")
 async def volume(interaction: discord.Interaction, level: int):
     vc = interaction.guild.voice_client
@@ -324,17 +342,14 @@ async def volume(interaction: discord.Interaction, level: int):
         await interaction.response.send_message("❌ Mức âm lượng phải nằm trong khoảng từ 0 đến 100.", ephemeral=True)
         return
 
-    # Kiểm tra xem source có phải là PCMVolumeTransformer chưa
     if isinstance(vc.source, discord.PCMVolumeTransformer):
         vc.source.volume = level / 100.0
     else:
-        # Nếu chưa, tạo VolumeTransformer mới
         vc.source = discord.PCMVolumeTransformer(vc.source, volume=level / 100.0)
 
     await interaction.response.send_message(f"🔊 Đã đặt âm lượng bot thành **{level}%**.", ephemeral=False)
 
 
-# ⭐️ LỆNH MỚI: Chuyển đến bài hát cụ thể ⭐️
 @bot.tree.command(name="jump", description="Chuyển đến bài hát theo số thứ tự trong hàng đợi 🔢")
 async def jump(interaction: discord.Interaction, index: int):
     vc = interaction.guild.voice_client
@@ -349,16 +364,12 @@ async def jump(interaction: discord.Interaction, index: int):
         await interaction.response.send_message(f"❌ Số thứ tự không hợp lệ. Hàng đợi có {len(q)} bài (bắt đầu từ 1).", ephemeral=True)
         return
         
-    # Xóa các bài từ 0 đến index-1 (trừ bài cần nhảy tới)
     del q[:index - 1] 
-    
-    # Kích hoạt chuyển bài (phát bài đầu tiên trong queue mới)
     vc.stop() 
     
     await interaction.response.send_message(f"🔢 Đã nhảy đến bài hát thứ **{index}** trong hàng đợi.", ephemeral=False)
 
 
-# (Các lệnh còn lại giữ nguyên)
 @bot.tree.command(name="skip", description="Chuyển sang bài tiếp theo ⏭️")
 async def skip(interaction: discord.Interaction):
     vc = interaction.guild.voice_client
@@ -447,11 +458,11 @@ async def shuffle(interaction: discord.Interaction):
 async def help(interaction: discord.Interaction):
     embed = discord.Embed(
         title="✨ KPop Radio Bot - Hướng Dẫn Lệnh ✨",
-        description="Bot phát nhạc ngẫu nhiên từ Dailymotion và YouTube công khai. Luôn dùng lệnh Slash (/).",
+        description="Bot chỉ chấp nhận URL Dailymotion (video hoặc playlist) hoặc phát nhạc ngẫu nhiên.",
         color=0xFF0099 
     )
     
-    embed.add_field(name="▶️ Phát Nhạc & Điều Khiển", value="`/play [tên/link]`, `/pause`, `/resume`, `/skip`, `/stop`", inline=False)
+    embed.add_field(name="▶️ Phát Nhạc & Điều Khiển", value="`/play [link Playlist/Video]`, `/pause`, `/resume`, `/skip`, `/stop`", inline=False)
     embed.add_field(name="⚙️ Quản Lý Nâng Cao", value="`/volume [0-100]`, `/jump [index]`, `/shuffle`", inline=False)
     embed.add_field(name="📜 Thông tin & Queue", value="`/nowplaying`, `/queue`", inline=False)
     embed.add_field(name="🚪 Rời Đi", value="`/leave`", inline=False)
