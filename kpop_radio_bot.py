@@ -20,7 +20,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 # Lưu ý: Các URL này vẫn có thể gây lỗi nếu bạn KHÔNG cung cấp cookie.
 # URL mẫu cũ của bạn bị lỗi xác thực, nên được thay bằng 1 URL đơn giản hơn:
 KPOP_SONGS = [
-    "https://www.youtube.com/watch?v=7AdzoG_jXcA", 
+    "https://www.youtube.com/watch?v=qho6wWlsANw", 
 ]
 
 queues = {}       
@@ -285,5 +285,6 @@ if TOKEN:
 else:
     print("❌ LỖI NGHIÊM TRỌNG: KHÔNG TÌM THẤY DISCORD_TOKEN trong biến môi trường.")
     print("Vui lòng đặt mã token mới (vừa reset) vào biến môi trường tên là DISCORD_TOKEN.")
+
 
 
