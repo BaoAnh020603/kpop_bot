@@ -37,11 +37,11 @@ DEFAULT_KPOP_SONGS = [
     "https://www.dailymotion.com/video/x3cbksb",
     "https://www.dailymotion.com/video/x8ucqke",
     "https://www.dailymotion.com/video/x8aauvk",
-    "https://www.dailymotion.com/video/x1y5ufe", #
+    "https://www.dailymotion.com/video/x1y5ufe", 
 ]
 
-queues = {}       # {guild_id: [list of URLs]}
-current_song = {} # {guild_id: song_info}
+queues = {}       
+current_song = {} 
 
 # Hàm tìm kiếm YouTube bằng yt-dlp (cho /play tên bài hát)
 def search_youtube(query):
@@ -54,7 +54,6 @@ def search_youtube(query):
     }
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            # Tìm kiếm và lấy info của video đầu tiên
             info = ydl.extract_info(query, download=False)
             if 'entries' in info:
                 return info['entries'][0]
@@ -63,26 +62,14 @@ def search_youtube(query):
         print(f"❌ Lỗi tìm kiếm yt-dlp: {e}")
         return None
 
-# ===== HÀM LẤY LYRICS =====
-def get_lyrics(query: str):
-    try:
-        resp = requests.get(f"https://some-random-api.com/lyrics?title={query}")
-        if resp.status_code == 200:
-            data = resp.json()
-            lyrics = data.get("lyrics", "Không tìm thấy lời bài hát 😢")
-            if len(lyrics) > 1500:
-                return lyrics[:1500] + "..."
-            return lyrics
-    except:
-        pass
-    return "Không tìm thấy lời bài hát 😢"
-
-# ===== HÀM PHÁT NHẠC (ĐÃ SỬA LỖI AFTER_PLAY) =====
+# ===== HÀM PHÁT NHẠC (ĐÃ SỬA LỖI AFTER_PLAY VÀ AUTO-QUEUE) =====
 async def play_next_song(vc, interaction=None):
     guild_id = vc.guild.id
     
     if not queues.get(guild_id):
         current_song[guild_id] = None
+        # Quay về trạng thái "dùng /play"
+        await bot.change_presence(activity=discord.Game(name="KPop Radio | Dùng /play")) 
         await asyncio.sleep(1)
         return
 
@@ -113,6 +100,13 @@ async def play_next_song(vc, interaction=None):
             await play_next_song(vc, interaction)
         return
 
+    # ⭐️ AUTO-QUEUE CHECK: Tự động nạp lại danh sách khi queue còn ít bài ⭐️
+    if len(queues.get(guild_id, [])) <= 3:
+        # Lấy 5 bài ngẫu nhiên từ danh sách mặc định và thêm vào queue
+        random_songs = random.sample(DEFAULT_KPOP_SONGS, min(5, len(DEFAULT_KPOP_SONGS)))
+        queues[guild_id].extend(random_songs)
+        print(f"✅ Auto-Queue: Đã thêm {len(random_songs)} bài ngẫu nhiên.")
+    
     current_song[guild_id] = {
         "title": title,
         "uploader": uploader,
@@ -120,7 +114,7 @@ async def play_next_song(vc, interaction=None):
         "url": webpage_url
     }
     
-    # ⭐️ Cập nhật trạng thái bot
+    # Cập nhật trạng thái bot
     await bot.change_presence(
         activity=discord.Activity(
             type=discord.ActivityType.listening, 
@@ -128,12 +122,10 @@ async def play_next_song(vc, interaction=None):
         )
     )
 
-    # ⭐️ SỬA LỖI: Cải thiện hàm after_play để xử lý chuyển bài an toàn
+    # Cải thiện hàm after_play để xử lý chuyển bài an toàn
     def after_play(err):
         if err:
             print(f"❌ Lỗi khi phát nhạc: {err}")
-        
-        # Chạy coroutine trong event loop chính để chuyển bài
         asyncio.run_coroutine_threadsafe(play_next_song(vc, None), bot.loop)
         
     if vc.is_playing():
@@ -154,17 +146,14 @@ async def play_next_song(vc, interaction=None):
             await play_next_song(vc, interaction)
         return
 
-    lyrics = get_lyrics(title)
-    
     # ⭐️ Giao diện Embed Xịn Xò hơn
     embed = discord.Embed(
         title=f"🎶 Đang phát: {title}",
         description=f"**🎤 Chủ kênh đăng tải video:** {uploader}",
         color=0xFF0099 # Hồng K-Pop
     )
-    embed.add_field(name="📜 Lyrics (Trích đoạn)", value=lyrics, inline=False)
     embed.add_field(name="🔗 Nguồn", value=f"[Xem trên Web]({webpage_url})", inline=True)
-    embed.set_footer(text=f"Đã thêm vào hàng đợi: {len(queues.get(guild_id, []))} bài")
+    embed.set_footer(text=f"Hàng đợi: {len(queues.get(guild_id, []))} bài | Auto-Queue Đang Bật 🔄")
     
     if thumbnail:
         embed.set_thumbnail(url=thumbnail)
@@ -216,12 +205,12 @@ async def play(interaction: discord.Interaction, query: str = None):
     
     # Xử lý Query
     if query:
-        # Nếu là URL, dùng trực tiếp; nếu là tên, tìm kiếm
         if query.startswith("http"):
             url = query
             song_title = "URL đã cung cấp"
         else:
-            info = await asyncio.to_thread(search_youtube, query)
+            # Chuyển search sang thread để không block event loop
+            info = await asyncio.to_thread(search_youtube, query) 
             if not info or 'webpage_url' not in info:
                 await interaction.followup.send(f"❌ Không tìm thấy bài hát cho từ khóa: `{query}`.", ephemeral=True)
                 return
@@ -242,30 +231,8 @@ async def play(interaction: discord.Interaction, query: str = None):
         asyncio.create_task(play_next_song(vc, interaction))
 
 
-# ===== /lyrics (Lấy lời bài hát đang phát) =====
-@bot.tree.command(name="lyrics", description="Hiển thị lời bài hát đang phát 📜")
-async def lyrics(interaction: discord.Interaction):
-    song = current_song.get(interaction.guild.id)
-    if not song:
-        await interaction.response.send_message("⚠️ Không có bài nào đang phát để xem lời.", ephemeral=True)
-        return
-
-    await interaction.response.defer()
-    
-    # Lấy lyrics qua thread
-    lyrics_text = await asyncio.to_thread(get_lyrics, song['title'])
-    
-    embed = discord.Embed(
-        title=f"📜 Lời bài hát: {song['title']}",
-        description=f"**🎤 {song['uploader']}**\n\n{lyrics_text}",
-        color=0xFF0099
-    )
-    await interaction.followup.send(embed=embed)
-
-
 # ===== /skip, /pause, /resume, /stop, /leave, /queue, /nowplaying, /shuffle (Giữ nguyên) =====
 @bot.tree.command(name="skip", description="Chuyển sang bài tiếp theo ⏭️")
-# ... (Nội dung hàm /skip) ...
 async def skip(interaction: discord.Interaction):
     vc = interaction.guild.voice_client
     if vc and vc.is_playing():
@@ -275,7 +242,6 @@ async def skip(interaction: discord.Interaction):
         await interaction.response.send_message("⚠️ Không có bài nào đang phát.", ephemeral=True)
 
 @bot.tree.command(name="pause", description="Tạm dừng nhạc ⏸️")
-# ... (Nội dung hàm /pause) ...
 async def pause(interaction: discord.Interaction):
     vc = interaction.guild.voice_client
     if vc and vc.is_playing():
@@ -285,7 +251,6 @@ async def pause(interaction: discord.Interaction):
         await interaction.response.send_message("⚠️ Không có bài nào đang phát.", ephemeral=True)
 
 @bot.tree.command(name="resume", description="Tiếp tục phát nhạc ▶️")
-# ... (Nội dung hàm /resume) ...
 async def resume(interaction: discord.Interaction):
     vc = interaction.guild.voice_client
     if vc and vc.is_paused():
@@ -295,29 +260,28 @@ async def resume(interaction: discord.Interaction):
         await interaction.response.send_message("⚠️ Không có bài nào đang tạm dừng.", ephemeral=True)
 
 @bot.tree.command(name="stop", description="Dừng phát nhạc ⏹️")
-# ... (Nội dung hàm /stop) ...
 async def stop(interaction: discord.Interaction):
     vc = interaction.guild.voice_client
     if vc:
         queues[interaction.guild.id] = []
         vc.stop() 
+        await bot.change_presence(activity=discord.Game(name="KPop Radio | Dùng /play"))
         await interaction.response.send_message("🛑 Đã dừng phát nhạc và xóa queue.")
     else:
         await interaction.response.send_message("⚠️ Bot chưa tham gia kênh thoại.", ephemeral=True)
 
 @bot.tree.command(name="leave", description="Bot rời khỏi kênh thoại 🚪")
-# ... (Nội dung hàm /leave) ...
 async def leave(interaction: discord.Interaction):
     vc = interaction.guild.voice_client
     if vc:
         queues[interaction.guild.id] = []
         await vc.disconnect()
+        await bot.change_presence(activity=discord.Game(name="KPop Radio | Dùng /play"))
         await interaction.response.send_message("👋 Bot đã rời khỏi kênh thoại.")
     else:
         await interaction.response.send_message("⚠️ Bot không ở trong kênh thoại.", ephemeral=True)
 
 @bot.tree.command(name="queue", description="Hiển thị danh sách bài chờ 📃")
-# ... (Nội dung hàm /queue) ...
 async def queue(interaction: discord.Interaction):
     q = queues.get(interaction.guild.id, [])
     if q:
@@ -327,7 +291,6 @@ async def queue(interaction: discord.Interaction):
         await interaction.response.send_message("⚠️ Không có bài nào trong hàng đợi.", ephemeral=True)
 
 @bot.tree.command(name="nowplaying", description="Hiển thị bài hát đang phát 🎶")
-# ... (Nội dung hàm /nowplaying) ...
 async def nowplaying(interaction: discord.Interaction):
     song = current_song.get(interaction.guild.id)
     if song:
@@ -343,7 +306,6 @@ async def nowplaying(interaction: discord.Interaction):
         await interaction.response.send_message("⚠️ Không có bài nào đang phát.", ephemeral=True)
 
 @bot.tree.command(name="shuffle", description="Trộn ngẫu nhiên danh sách bài chờ 🔀")
-# ... (Nội dung hàm /shuffle) ...
 async def shuffle(interaction: discord.Interaction):
     q = queues.get(interaction.guild.id, [])
     if len(q) > 1:
@@ -352,7 +314,6 @@ async def shuffle(interaction: discord.Interaction):
     else:
         await interaction.response.send_message("⚠️ Không đủ bài để trộn.", ephemeral=True)
 
-# ===== /help (Giao diện mới) =====
 @bot.tree.command(name="help", description="Hiển thị hướng dẫn sử dụng bot ℹ️")
 async def help(interaction: discord.Interaction):
     embed = discord.Embed(
@@ -362,7 +323,7 @@ async def help(interaction: discord.Interaction):
     )
     
     embed.add_field(name="▶️ Phát Nhạc & Điều Khiển", value="`/play [tên/link]`, `/pause`, `/resume`, `/skip`, `/stop`", inline=False)
-    embed.add_field(name="📜 Thông tin & Queue", value="`/nowplaying`, `/queue`, `/lyrics`, `/shuffle`", inline=False)
+    embed.add_field(name="📜 Thông tin & Queue", value="`/nowplaying`, `/queue`, `/shuffle`", inline=False)
     embed.add_field(name="🚪 Quản Lý Bot", value="`/leave`", inline=False)
 
     embed.set_footer(text="💖 Được phát triển tại Việt Nam | Dùng /play để bắt đầu!")
@@ -376,4 +337,3 @@ if TOKEN:
     bot.run(TOKEN)
 else:
     print("❌ LỖI NGHIÊM TRỌNG: KHÔNG TÌM THẤY DISCORD_TOKEN trong biến môi trường.")
-
