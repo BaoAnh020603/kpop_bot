@@ -159,7 +159,7 @@ async def play_next_song(vc, interaction=None):
     # ⭐️ Giao diện Embed Xịn Xò hơn
     embed = discord.Embed(
         title=f"🎶 Đang phát: {title}",
-        description=f"**🎤 Nghệ sĩ:** {uploader}",
+        description=f"**🎤 Chủ kênh đăng tải video:** {uploader}",
         color=0xFF0099 # Hồng K-Pop
     )
     embed.add_field(name="📜 Lyrics (Trích đoạn)", value=lyrics, inline=False)
@@ -376,3 +376,4 @@ if TOKEN:
     bot.run(TOKEN)
 else:
     print("❌ LỖI NGHIÊM TRỌNG: KHÔNG TÌM THẤY DISCORD_TOKEN trong biến môi trường.")
+
