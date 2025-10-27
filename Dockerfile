@@ -1,6 +1,8 @@
 # Dockerfile
-# Thay thế: FROM python:3.13-slim-buster
-FROM python:3.12-slim-buster
+# THAY THẾ dòng 3 bằng:
+FROM python:3.11-slim-buster
+# HOẶC
+# FROM python:3.10-slim-buster 
 
 # ⭐️ CÀI ĐẶT FFMPEG (Đây là bước khắc phục lỗi chính)
 RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
