@@ -37,6 +37,36 @@ DEFAULT_KPOP_SONGS = [
     "https://www.dailymotion.com/video/x8ucqke",
     "https://www.dailymotion.com/video/x8aauvk",
     "https://www.dailymotion.com/video/x1y5ufe", 
+    "https://www.dailymotion.com/video/x2rlakr",
+    "https://www.dailymotion.com/video/x5c6csn",
+    "https://www.dailymotion.com/video/x9so4gy",
+    "https://www.dailymotion.com/video/x5sk7wk",
+    "https://www.dailymotion.com/video/x36mwl8",
+    "https://www.dailymotion.com/video/x32lif5",
+    "https://www.dailymotion.com/video/x3eyspc",
+    "https://www.dailymotion.com/video/x8pk5tx",
+    "https://www.dailymotion.com/video/xztew3",
+    "https://www.dailymotion.com/video/x53pet7",
+    "https://www.dailymotion.com/video/x7wxgc2",
+    "https://www.dailymotion.com/video/x4asrb5",
+    "https://www.dailymotion.com/video/x7t805s",
+    "https://www.dailymotion.com/video/x8o9huy",
+    "https://www.dailymotion.com/video/x7kl37j",
+    "https://www.dailymotion.com/video/x7u6j5q",
+    "https://www.dailymotion.com/video/x3eysq1",
+    "https://www.dailymotion.com/video/x8qdpoj",
+    "https://www.dailymotion.com/video/x35696o",
+    "https://www.dailymotion.com/video/x3999do",
+    "https://www.dailymotion.com/video/x2bojy2",
+    "https://www.dailymotion.com/video/x90v7mc",
+    "https://www.dailymotion.com/video/x7v1u4q",
+    "https://www.dailymotion.com/video/x678e5t",
+    "https://www.dailymotion.com/video/x7buirx",
+    "https://www.dailymotion.com/video/x8pl2qh",
+    "https://www.dailymotion.com/video/x8pxzwy",
+    "https://www.dailymotion.com/video/x8ccvv4",
+    "https://www.dailymotion.com/video/x8be83u",
+    "https://www.dailymotion.com/video/x7ytjr3",
 ]
 
 queues = {}       
@@ -478,3 +508,4 @@ if TOKEN:
     bot.run(TOKEN)
 else:
     print("❌ LỖI NGHIÊM TRỌNG: KHÔNG TÌM THẤY DISCORD_TOKEN trong biến môi trường.")
+
