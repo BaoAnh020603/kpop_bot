@@ -12,16 +12,13 @@ Hỗ trợ phát nhạc trực tuyến, lệnh điều khiển và hoạt độn
 - 🌐 Keep-alive để hoạt động liên tục
 
 ## 📦 Cấu trúc dự án
-
+```
 ├── Dockerfile
 ├── apt-packages.txt
 ├── keep_alive.py
 ├── kpop_radio_bot.py
 └── requirements.txt
-
-bash
-Sao chép mã
-
+```
 ## 🛠 Cài đặt & chạy
 
 ### ✅ Yêu cầu
