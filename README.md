@@ -30,23 +30,22 @@ Hỗ trợ phát nhạc trực tuyến, lệnh điều khiển và hoạt độn
 ```bash
 git clone https://github.com/BaoAnh020603/kpop_bot
 cd kpop_bot
+```
 📦 Cài thư viện
-bash
-Sao chép mã
+```
 pip install -r requirements.txt
 ▶️ Chạy bot
-bash
-Sao chép mã
+```
 python kpop_radio_bot.py
 🐳 Chạy bằng Docker
-bash
-Sao chép mã
+```
 docker build -t kpop_radio_bot .
 docker run -d kpop_radio_bot
+```
 🌍 Chạy keep-alive (Replit/Render)
-bash
-Sao chép mã
+```
 python keep_alive.py
+```
 🔧 Biến môi trường
 Biến	Mô tả
 BOT_TOKEN	Token bot Telegram
