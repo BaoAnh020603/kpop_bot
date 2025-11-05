@@ -47,17 +47,17 @@ docker run -d kpop_radio_bot
 python keep_alive.py
 ```
 🔧 Biến môi trường
+```
 Biến	Mô tả
 BOT_TOKEN	Token bot Telegram
 STREAM_URL	URL stream radio K-Pop
-
+```
+```
 Lưu ý: tạo file .env để lưu thông tin
-
+```
 📚 Công nghệ sử dụng
 Python
-
 FFmpeg
-
 Docker (tùy chọn)
 
 ❤️ Đóng góp
