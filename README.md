@@ -52,7 +52,7 @@ python keep_alive.py
 ```
 Biến	      Mô tả
 BOT_TOKEN	  Token bot Telegram
-STREAM_URL	URL stream radio K-Pop
+STREAM_URL	  URL stream radio K-Pop
 ```
 
 Lưu ý: tạo file .env để lưu thông tin
