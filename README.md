@@ -1,7 +1,16 @@
-# 🎧 Kpop Radio Bot
+<h1 align="center">🎧 K-POP Radio Bot</h1>
 
-Bot phát radio K-Pop 24/7 dành cho người yêu âm nhạc Hàn Quốc.  
-Hỗ trợ phát nhạc trực tuyến, lệnh điều khiển và hoạt động ổn định trên môi trường server.
+<p align="center">
+  Bot phát radio K-POP 24/7 dành cho người yêu nhạc Hàn Quốc 💖  
+  Hoạt động ổn định, tự động reconnect, hỗ trợ chạy Docker / VPS / Replit
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.9%2B-blue?logo=python" />
+  <img src="https://img.shields.io/badge/Streaming-KPOP-FC4F7B" />
+  <img src="https://img.shields.io/badge/Status-Active-brightgreen" />
+  <img src="https://img.shields.io/github/license/BaoAnh020603/kpop_bot" />
+</p>
 
 ## 🚀 Tính năng
 
