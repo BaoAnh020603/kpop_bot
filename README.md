@@ -31,22 +31,22 @@ Hỗ trợ phát nhạc trực tuyến, lệnh điều khiển và hoạt độn
 git clone https://github.com/BaoAnh020603/kpop_bot
 cd kpop_bot
 ```
-📦 Cài thư viện
+## 📦 Cài thư viện
 ```
 pip install -r requirements.txt
-▶️ Chạy bot
+## ▶️ Chạy bot
 ```
 python kpop_radio_bot.py
-🐳 Chạy bằng Docker
+## 🐳 Chạy bằng Docker
 ```
 docker build -t kpop_radio_bot .
 docker run -d kpop_radio_bot
 ```
-🌍 Chạy keep-alive (Replit/Render)
+## 🌍 Chạy keep-alive (Replit/Render)
 ```
 python keep_alive.py
 ```
-🔧 Biến môi trường
+## 🔧 Biến môi trường
 ```
 Biến	Mô tả
 BOT_TOKEN	Token bot Telegram
@@ -55,12 +55,12 @@ STREAM_URL	URL stream radio K-Pop
 ```
 Lưu ý: tạo file .env để lưu thông tin
 ```
-📚 Công nghệ sử dụng
+## 📚 Công nghệ sử dụng
 Python
 FFmpeg
 Docker (tùy chọn)
 
-❤️ Đóng góp
+## ❤️ Đóng góp
 Pull request & báo lỗi luôn được chào đón!
 
-⭐ Hãy star repo nếu bạn thích dự án này!
+## ⭐ Hãy star repo nếu bạn thích dự án này!
