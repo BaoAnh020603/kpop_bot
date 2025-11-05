@@ -50,8 +50,8 @@ python keep_alive.py
 ```
 ### 🔧 Biến môi trường
 ```
-Biến	Mô tả
-BOT_TOKEN	Token bot Telegram
+Biến	      Mô tả
+BOT_TOKEN	  Token bot Telegram
 STREAM_URL	URL stream radio K-Pop
 ```
 
