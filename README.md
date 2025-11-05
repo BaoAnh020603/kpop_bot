@@ -34,6 +34,7 @@ cd kpop_bot
 ## 📦 Cài thư viện
 ```
 pip install -r requirements.txt
+```
 ## ▶️ Chạy bot
 ```
 python kpop_radio_bot.py
@@ -52,9 +53,9 @@ Biến	Mô tả
 BOT_TOKEN	Token bot Telegram
 STREAM_URL	URL stream radio K-Pop
 ```
-```
+
 Lưu ý: tạo file .env để lưu thông tin
-```
+
 ## 📚 Công nghệ sử dụng
 Python
 FFmpeg
